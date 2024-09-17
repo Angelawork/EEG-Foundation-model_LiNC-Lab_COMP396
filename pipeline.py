@@ -59,7 +59,7 @@ def run_pipeline(datasets, subjects, paradigm, model_pipeline, eval_scheme):
         result = result[result["subject"].astype(int).isin(subjects)]
         eval_results[ds.code] = result
 
-        return eval_results
+    return eval_results
 
 def process_results(results):
     """
@@ -94,7 +94,8 @@ if __name__ == "__main__":
     mne.set_log_level("CRITICAL")
     warnings.filterwarnings("ignore")
 
-    results=run_pipeline(datasets=[Zhou2016(), BNCI2014_001()], subjects=[1,3] , paradigm=LeftRightImagery(),
-                model_pipeline=make_pipeline(CSP(n_components=8), LDA()),
-                eval_scheme="WithinSessionEvaluation")
+    results=run_pipeline(datasets=[Zhou2016(), BNCI2014_001()], subjects=[1, 3] , paradigm=LeftRightImagery(),
+             model_pipeline=make_pipeline(CSP(n_components=8), LDA()),
+             eval_scheme="WithinSessionEvaluation")
     print(results)
+    print(process_results(results))
