@@ -1,0 +1,10 @@
+venv/
+ENV/
+env/
+.vscode/
+__pycache__/
+wandb/
+runs/
+metaw_venv/
+myenv/
+mne_data/
