@@ -34,31 +34,32 @@ def run_pipeline(datasets, subjects, paradigm, model_pipeline, eval_scheme):
     eval_results = {}
 
     for ds in datasets:
-      if not paradigm.is_valid(ds):
-        raise ValueError(f"{ds.code} not compatible with paradigm {type(paradigm).__name__}")
+        if not paradigm.is_valid(ds):
+            raise ValueError(f"{ds.code} not compatible with paradigm {type(paradigm).__name__}")
           
-      if hasattr(ds, "get_data"):
-        ds.subject_list = subjects
-      else:
-        raise ValueError(f"Provided dataset invalid: {ds}")
+        if hasattr(ds, "get_data"):
+            ds.subject_list = subjects
+        else:
+            raise ValueError(f"Provided dataset invalid: {ds}")
 
-      eval_scheme = WithinSessionEvaluation(paradigm=paradigm, datasets=[ds], overwrite=False)
-      if isinstance(model_pipeline, Pipeline):
-        pipe_name = "+".join([rename[step.__class__.__name__.lower()] if step.__class__.__name__.lower() in rename 
-                                else step.__class__.__name__ 
-                                for _, step in model_pipeline.steps])
-        pipelines = {pipe_name: model_pipeline}
-      elif isinstance(model_pipeline, dict):
-        pipelines = model_pipeline
-      else:
-        raise ValueError(f"Invalid pipeline: {model_pipeline}")
-      
-      print(f"Running the pipeline with subjects={subjects} on dataset={ds.code} using paradigm: {paradigm}")
-      result = eval_scheme.process(pipelines)
-      result["pipeline"] = pipe_name
-      eval_results[ds.code] = result
+        eval_scheme = WithinSessionEvaluation(paradigm=paradigm, datasets=[ds], overwrite=False)
+        if isinstance(model_pipeline, Pipeline):
+            pipe_name = "+".join([rename[step.__class__.__name__.lower()] if step.__class__.__name__.lower() in rename 
+                                    else step.__class__.__name__ 
+                                    for _, step in model_pipeline.steps])
+            pipelines = {pipe_name: model_pipeline}
+        elif isinstance(model_pipeline, dict):
+            pipelines = model_pipeline
+        else:
+            raise ValueError(f"Invalid pipeline: {model_pipeline}")
+        
+        print(f"Running the pipeline with subjects={subjects} on dataset={ds.code} using paradigm: {paradigm}")
+        result = eval_scheme.process(pipelines)
+        result["pipeline"] = pipe_name
+        result = result[result["subject"].astype(int).isin(subjects)]
+        eval_results[ds.code] = result
 
-    return eval_results
+        return eval_results
 
 def process_results(results):
     """
@@ -93,7 +94,7 @@ if __name__ == "__main__":
     mne.set_log_level("CRITICAL")
     warnings.filterwarnings("ignore")
 
-    results=run_pipeline(datasets=[Zhou2016(), BNCI2014_001()], subjects=[1, 3] , paradigm=LeftRightImagery(),
+    results=run_pipeline(datasets=[Zhou2016(), BNCI2014_001()], subjects=[1,3] , paradigm=LeftRightImagery(),
                 model_pipeline=make_pipeline(CSP(n_components=8), LDA()),
                 eval_scheme="WithinSessionEvaluation")
     print(results)
