@@ -63,9 +63,11 @@ def run_pipeline(datasets, paradigm, model_pipeline, eval_scheme, random_state=2
           result["pipeline"] = pipe_name
           result["subject"] =original_subject_ids[:len(result)]
         else:
-          for pipe_name in pipelines:
-              if pipe_name in result.columns:
-                  result["subject"] = original_subject_ids[:len(result[pipe_name])]
+            try:#renaming subject id by original order
+                for pipe_name in pipelines:
+                    result["subject"] = original_subject_ids * (len(result)//len(original_subject_ids))
+            except:
+                print(f"Failed to rename Dataset {ds.code} pipeline output with original subject id={original_subject_ids}")
         eval_results[ds.code] = result
         
     return eval_results
