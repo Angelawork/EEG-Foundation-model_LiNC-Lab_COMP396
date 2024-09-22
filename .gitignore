@@ -8,3 +8,4 @@ runs/
 metaw_venv/
 myenv/
 mne_data/
+*.pdf

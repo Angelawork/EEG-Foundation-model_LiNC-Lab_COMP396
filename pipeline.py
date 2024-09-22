@@ -5,9 +5,6 @@ from moabb.evaluations import WithinSessionEvaluation, CrossSessionEvaluation, C
 from sklearn.pipeline import Pipeline
 import pandas as pd
 import numpy as np
-import os
-os.environ["MNE_DATA"] = "./mne_data"
-os.environ["MOABB_RESULTS"] = "./mne_data"
 
 def run_pipeline(datasets, paradigm, model_pipeline, eval_scheme, random_state=24):
     """
@@ -72,7 +69,7 @@ def run_pipeline(datasets, paradigm, model_pipeline, eval_scheme, random_state=2
         
     return eval_results
 
-def read_setup(file_path):
+def read_config(file_path):
     subject_sessions=[]
     with open(file_path, "r") as file:
         for line in file:
@@ -80,7 +77,7 @@ def read_setup(file_path):
     return subject_sessions
 
 """ Usage example
-subject_sessions=read_setup("./benchmark1_subjects.txt")
+subject_sessions=read_config("./benchmark1_subjects.txt")
 subject_sessions_setup = extract_subject_sessions(subject_sessions)
 
 paradigm=MotorImagery(n_classes=2, events=["left_hand", "right_hand"])
@@ -99,15 +96,3 @@ print(process_results(result))
 """
 
 
-if __name__ == "__main__":
-    from mne.decoding import CSP
-    from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
-    from sklearn.pipeline import make_pipeline
-    import warnings
-    import mne
-    import moabb
-    from moabb.evaluations import WithinSessionEvaluation
-    from moabb.paradigms import MotorImagery
-    moabb.set_log_level("info")
-    mne.set_log_level("CRITICAL")
-    warnings.filterwarnings("ignore")
