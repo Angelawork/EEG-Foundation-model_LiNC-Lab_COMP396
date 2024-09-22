@@ -27,6 +27,9 @@ moabb.set_log_level("info")
 mne.set_log_level("CRITICAL")
 warnings.filterwarnings("ignore")
 
+# SCRATCH = os.environ["SCRATCH"]
+# SLURM_TMPDIR = os.environ["SLURM_TMPDIR"]
+# path = SLURM_TMPDIR+"/mne_data"
 path = "./mne_data"
 if not os.path.exists(path):
     os.makedirs(path)
@@ -36,6 +39,7 @@ else:
 
 os.environ["MNE_DATA"] = path
 os.environ["MOABB_RESULTS"] = path
+print(f"Path for MNE_DATA: {os.environ['MNE_DATA']}")
 
 #----------------------------pipeline definition----------------------------
 pipelines = {}
@@ -83,23 +87,25 @@ pipelines["CSP+LDA"] = make_pipeline(
 paradigm=MotorImagery(n_classes=2, events=["left_hand", "right_hand"])
 # extract config from text file for session/subject id
 subject_sessions_config=read_config("./benchmark1_subjects.txt")
-print(f"Config for this experiment: {subject_sessions_config}")
 subject_sessions_setup = extract_subject_sessions(subject_sessions_config)
-filtered_setup=filter_data(paradigm,subject_sessions_setup)
+print(f"Parsed Config for this experiment: {subject_sessions_setup}")
+from itertools import islice
+filtered_setup=filter_data(paradigm,dict(islice(subject_sessions_setup.items(), 3)))
 
 filtered_ds_cls=[]
 for name, setup in filtered_setup.items():
   filtered_ds_cls.append(create_custom_ds(name,setup))
 
-result=run_pipeline(datasets=filtered_ds_cls, paradigm=paradigm,
+from moabb.datasets import BNCI2014_001, Zhou2016
+result=run_pipeline(datasets=[BNCI2014_001(),Zhou2016()], paradigm=paradigm,
                 model_pipeline=pipelines, eval_scheme="WithinSessionEvaluation")
+print(result)
 processed_df=process_results(result)
-save_path="./output_csv"
 print(processed_df)
 
-processed_df.to_csv(save_path+"summary.csv", index=False)
+processed_df.to_csv("./summary.csv", index=False)
 for key, df in result.items():
-    filename = f"{save_path}/{key}.csv" 
+    filename = f"./{key}.csv" 
     df.to_csv(filename, index=False)
     print(f"Saved {filename}")
 
