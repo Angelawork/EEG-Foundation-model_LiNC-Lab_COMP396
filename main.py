@@ -96,16 +96,17 @@ filtered_ds_cls=[]
 for name, setup in filtered_setup.items():
   filtered_ds_cls.append(create_custom_ds(name,setup))
 
-from moabb.datasets import BNCI2014_001, Zhou2016
-result=run_pipeline(datasets=[BNCI2014_001(),Zhou2016()], paradigm=paradigm,
+# from moabb.datasets import BNCI2014_001, Zhou2016
+#[BNCI2014_001(),Zhou2016()]
+result=run_pipeline(datasets=filtered_ds_cls, paradigm=paradigm,
                 model_pipeline=pipelines, eval_scheme="WithinSessionEvaluation")
 print(result)
 processed_df=process_results(result)
 print(processed_df)
 
-processed_df.to_csv("./summary.csv", index=False)
+processed_df.to_csv("./summary_3.csv", index=False)
 for key, df in result.items():
-    filename = f"./{key}.csv" 
+    filename = f"./{key}_3.csv" 
     df.to_csv(filename, index=False)
     print(f"Saved {filename}")
 

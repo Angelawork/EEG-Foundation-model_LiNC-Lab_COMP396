@@ -38,7 +38,7 @@ BNCI2014-004_6_2.h5             PhysionetMotorImagery_47_0.h5  Schirrmeister2017
 BNCI2014-004_6_3.h5             PhysionetMotorImagery_48_0.h5  Schirrmeister2017_5_0.h5
 BNCI2014-004_6_4.h5             PhysionetMotorImagery_49_0.h5  Schirrmeister2017_6_0.h5
 BNCI2014-004_8_0.h5             PhysionetMotorImagery_50_0.h5  Schirrmeister2017_7_0.h5
-description.mpk                 PhysionetMotorImagery_5_0.h5   Schirrmeister2017_8_0.h5
+PhysionetMotorImagery_5_0.h5   Schirrmeister2017_8_0.h5
 GrosseWentrup2009_10_0.h5       PhysionetMotorImagery_51_0.h5  Schirrmeister2017_9_0.h5
 GrosseWentrup2009_1_0.h5        PhysionetMotorImagery_52_0.h5  Weibo2014_10_0.h5
 GrosseWentrup2009_2_0.h5        PhysionetMotorImagery_53_0.h5  Weibo2014_1_0.h5
