@@ -1,11 +1,10 @@
 from mne.decoding import CSP
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
-from sklearn.pipeline import make_pipeline
 import warnings
 import mne
 import moabb
 from moabb.evaluations import WithinSessionEvaluation
 from moabb.paradigms import MotorImagery
+from moabb import benchmark
 import os
 from utils import *
 from dataset_setup import *
@@ -18,6 +17,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.svm import SVC
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 from sklearn.linear_model import LogisticRegression, ElasticNet
+from sklearn.pipeline import Pipeline
 
 from braindecode.models import ShallowFBCSPNet, Deep4Net, EEGNetv4
 from keras.losses import BinaryCrossentropy
@@ -29,7 +29,15 @@ warnings.filterwarnings("ignore")
 
 # SCRATCH = os.environ["SCRATCH"]
 # SLURM_TMPDIR = os.environ["SLURM_TMPDIR"]
-# path = SLURM_TMPDIR+"/mne_data"
+# from mne import get_config
+# from moabb.utils import set_download_dir
+
+# original_path = get_config("MNE_DATA")
+# print(f"The download directory is currently {original_path}")
+# new_path = SCRATCH+"/mne_data"
+# set_download_dir(new_path)
+# check_path = get_config("MNE_DATA")
+# print(f"Now the download directory has been changed to {check_path}")
 path = "./mne_data"
 if not os.path.exists(path):
     os.makedirs(path)
@@ -62,6 +70,12 @@ pipelines["FgMDM"] = make_pipeline(
 pipelines["TS+SVM"] = make_pipeline(
     Covariances("oas"), TangentSpace(metric="riemann"), SVC(kernel="rbf")
 )
+
+# # TS+EL
+# pipelines["TS+EL"] = make_pipeline(
+#     Covariances("oas"), TangentSpace(metric="riemann"), ElasticNet()
+# )
+
 # FilterBank+SVM
 pipelines["FilterBank+SVM"] = make_pipeline(
     Covariances("oas"), TangentSpace(metric="riemann"), SVC(kernel="linear")
@@ -81,6 +95,30 @@ pipelines["DLCSPauto+shLDA"] = make_pipeline(
 pipelines["CSP+LDA"] = make_pipeline(
     Covariances("oas"), TangentSpace(metric="riemann"), LDA()
 )
+
+# MDM
+pipelines["MDM"] = make_pipeline(
+    Covariances("oas"), MDM(metric="riemann")
+)
+
+# TRCSP+LDA
+pipelines["TRCSP+LDA"] = make_pipeline(
+    Covariances("oas"), TangentSpace(metric="riemann"), LDA()
+)
+
+#converts matrix 3D > 2D feature vector.
+from moabb.pipelines.features import LogVariance
+
+# LogVariance+LDA
+pipelines["LogVariance+LDA"] = make_pipeline(
+    Covariances("oas"), LogVariance(),  LDA()
+)
+
+# LogVariance+SVM
+pipelines["LogVariance+SVM"] = make_pipeline(
+    Covariances("oas"), LogVariance(), SVC(kernel="linear")
+)
+
 #----------------------------pipeline definition----------------------------
 
 # experiment setup
@@ -88,25 +126,76 @@ paradigm=MotorImagery(n_classes=2, events=["left_hand", "right_hand"])
 # extract config from text file for session/subject id
 subject_sessions_config=read_config("./benchmark1_subjects.txt")
 subject_sessions_setup = extract_subject_sessions(subject_sessions_config)
-print(f"Parsed Config for this experiment: {subject_sessions_setup}")
 from itertools import islice
-filtered_setup=filter_data(paradigm,dict(islice(subject_sessions_setup.items(), 3)))
+filtered_setup=parse_setup(paradigm,subject_sessions_setup)
+print(f"Parsed Config for this experiment: {filtered_setup}")
 
-filtered_ds_cls=[]
-for name, setup in filtered_setup.items():
-  filtered_ds_cls.append(create_custom_ds(name,setup))
+# setup dataset list
+filtered_ds=subjDS_setup(paradigm,filtered_setup)
+seeds=[1,2,3]
+results={}
 
-# from moabb.datasets import BNCI2014_001, Zhou2016
-#[BNCI2014_001(),Zhou2016()]
-result=run_pipeline(datasets=filtered_ds_cls, paradigm=paradigm,
-                model_pipeline=pipelines, eval_scheme="WithinSessionEvaluation")
-print(result)
-processed_df=process_results(result)
-print(processed_df)
+pipelines = {}
 
-processed_df.to_csv("./summary_3.csv", index=False)
-for key, df in result.items():
-    filename = f"./{key}_3.csv" 
-    df.to_csv(filename, index=False)
+pipelines["TS+SVM"] = Pipeline(
+    steps=[("Covariances", Covariances("oas")),
+        ("Tangent_Space", TangentSpace(metric="riemann")),
+        (
+            "svc",
+            SVC(kernel="linear"),
+        ),
+    ]
+)
+param_grid = {}
+param_grid["TS+SVM"] = {
+    "svc__C": [0.5,1,1.5],
+    "svc__kernel":["rbf","linear"],
+}
+for s in seeds:
+    evaluation = WithinSessionEvaluation(
+        paradigm=paradigm,
+        datasets=filtered_ds,
+        overwrite=True,
+        random_state=s,
+        hdf5_path="./output_csv/",
+        n_jobs=-1,
+        save_model=True,
+    )
+    result = evaluation.process(pipelines, param_grid)
+    # result = benchmark(
+    #     pipelines="./TSSVM_grid.yml",
+    #     evaluations=["WithinSession"],
+    #     paradigms=["LeftRightImagery"],
+    #     include_datasets=filtered_ds,
+    #     results="./output_csv/",
+    #     overwrite=True,
+    #     plot=False,
+    #     output="./output_csv/",
+    # )
+    print(result)
+    filename = f"./output_csv/seed_results/grid_seed={s}.csv" 
+    result.to_csv(filename, index=False)
     print(f"Saved {filename}")
+# for s in seeds:
+#     result=run_pipeline(datasets=filtered_ds, paradigm=paradigm,
+#                     model_pipeline=pipelines, eval_scheme="WithinSessionEvaluation",
+#                     random_state=s)
+#     for ds, output in result.items():
+#         df_session_filtered=get_included_df(filtered_setup[ds], output)
+#         result[ds]=df_session_filtered
+   
+#     print(result)
+#     save_results_dict(result, seed=s)
+#     results[s]=result
+
+#     processed_df=process_results(result)
+#     processed_df.to_csv(f"./output_csv/seed_results/summary_seed={s}.csv", index=False)
+#     print(processed_df)
+    
+# avg_results=avg_over_seed(results)
+# print(avg_results)
+# for key, df in avg_results.items():
+#     filename = f"./output_csv/seed_results/avg_results_ds={key}_seed={seeds}.csv" 
+#     df.to_csv(filename, index=False)
+#     print(f"Saved {filename}")
 
