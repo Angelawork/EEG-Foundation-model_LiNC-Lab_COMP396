@@ -70,13 +70,6 @@ def run_pipeline(datasets, paradigm, model_pipeline, eval_scheme, random_state=2
         
     return eval_results
 
-def read_config(file_path):
-    subject_sessions=[]
-    with open(file_path, "r") as file:
-        for line in file:
-            subject_sessions+=[l.strip() for l in line.split()]
-    return subject_sessions
-
 """ Usage example
 subject_sessions=read_config("./benchmark1_subjects.txt")
 subject_sessions_setup = extract_subject_sessions(subject_sessions)
@@ -84,7 +77,7 @@ subject_sessions_setup = extract_subject_sessions(subject_sessions)
 paradigm=MotorImagery(n_classes=2, events=["left_hand", "right_hand"])
 test_ds_setup={"BNCI2014-001":subject_sessions_setup["BNCI2014-001"][:3],
       "PhysionetMotorImagery":subject_sessions_setup["PhysionetMotorImagery"][:3]}
-filtered_setup=filter_data(paradigm,test_ds_setup)
+filtered_setup=compoundDS_setup(paradigm,test_ds_setup)
 
 filtered_ds_cls=[]
 for name, setup in filtered_setup.items():
