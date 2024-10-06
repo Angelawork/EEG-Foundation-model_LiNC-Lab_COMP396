@@ -37,7 +37,36 @@ def get_dataset_by_name(paradigm, name):
     print(f"{name} in {paradigm} not found!")
     return None, None
 
-def filter_data(paradigm, filter_dict):
+def parse_setup(paradigm,setup):
+    output={}
+    for ds, config in setup.items():
+        allowed_subj_session = {int(subject):session for subject, session in config}
+        allowed_subj = allowed_subj_session.keys()
+        
+        _, dataset = get_dataset_by_name(paradigm, ds)
+        for subj in allowed_subj:
+            data=dataset.get_data([subj])
+            allowed_sessions = dict(allowed_subj_session).get(subj, [])
+            available_sessions = list(data[subj].keys())
+            filtered_sessions=[]
+
+            for id1, id2 in zip(allowed_sessions, available_sessions):
+                if id1 in id2:
+                    filtered_sessions.append(id2)
+            allowed_subj_session[subj]=filtered_sessions
+        output[ds]=allowed_subj_session
+    return output
+
+def subjDS_setup(paradigm, filter_dict):
+    """only subjects are filtered"""
+    output=[]
+    for ds_name in filter_dict.keys():
+        _, dataset = get_dataset_by_name(paradigm, ds_name)
+        dataset.subject_list = filter_dict[ds_name].keys()
+        output.append(dataset)
+    return output
+
+def compoundDS_setup(paradigm, filter_dict):
   filtered_session_name=[]
   filtered_data={}
   filtered_subject_tuple=[]
