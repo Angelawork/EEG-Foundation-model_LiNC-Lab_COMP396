@@ -1,4 +1,3 @@
-from mne.decoding import CSP
 import warnings
 import mne
 import moabb
@@ -6,26 +5,36 @@ from moabb.evaluations import WithinSessionEvaluation
 from moabb.paradigms import MotorImagery
 from moabb import benchmark
 import os
+import random
 from utils import *
 from dataset_setup import *
 from pipeline import *
 
 from pyriemann.estimation import Covariances
 from pyriemann.tangentspace import TangentSpace
-from pyriemann.classification import MDM
+from pyriemann.classification import MDM,FgMDM
 from sklearn.pipeline import make_pipeline
 from sklearn.svm import SVC
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
-from sklearn.linear_model import LogisticRegression, ElasticNet
+from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 
 from braindecode.models import ShallowFBCSPNet, Deep4Net, EEGNetv4
 from keras.losses import BinaryCrossentropy
 from moabb.pipelines.deep_learning import KerasEEGNeX, KerasEEGTCNet, KerasEEGNet_8_2, KerasEEGITNet, KerasShallowConvNet
+from moabb.pipelines import ExtendedSSVEPSignal
+from moabb.pipelines.csp import TRCSP
+from moabb.pipelines.features import AugmentedDataset
+from pyriemann.spatialfilters import CSP
 
 moabb.set_log_level("info")
 mne.set_log_level("CRITICAL")
 warnings.filterwarnings("ignore")
+
+def set_seed(s):
+    np.random.seed(s)
+    random.seed(s)
+    tf.random.set_seed(s)
 
 # SCRATCH = os.environ["SCRATCH"]
 # SLURM_TMPDIR = os.environ["SLURM_TMPDIR"]
@@ -53,32 +62,38 @@ print(f"Path for MNE_DATA: {os.environ['MNE_DATA']}")
 pipelines = {}
 # ACM+TS+SVM
 pipelines["ACM+TS+SVM"] = make_pipeline(
-    Covariances("oas"), TangentSpace(metric="riemann"), SVC(kernel="linear")
+    AugmentedDataset(),Covariances("cov"), TangentSpace(metric="riemann"), SVC(kernel="rbf")
 )
 
 # TS+LR
 pipelines["TS+LR"] = make_pipeline(
-    Covariances("oas"), TangentSpace(metric="riemann"), LogisticRegression()
+    Covariances("oas"), TangentSpace(metric="riemann"), LogisticRegression(C=1.0)
 )
 
 # FgMDM
 pipelines["FgMDM"] = make_pipeline(
-    Covariances("oas"), MDM(metric="riemann")
+    Covariances("oas"), FgMDM(metric="riemann")
 )
 
 # TS+SVM
 pipelines["TS+SVM"] = make_pipeline(
-    Covariances("oas"), TangentSpace(metric="riemann"), SVC(kernel="rbf")
+    Covariances("oas"), TangentSpace(metric="riemann"), SVC(kernel="linear")
 )
 
-# # TS+EL
-# pipelines["TS+EL"] = make_pipeline(
-#     Covariances("oas"), TangentSpace(metric="riemann"), ElasticNet()
-# )
+# TS+EL
+pipelines["TS+EL"] = make_pipeline(
+    Covariances("oas"), TangentSpace(metric="riemann"), LogisticRegression(
+            penalty="elasticnet",       
+            l1_ratio=0.70,             
+            intercept_scaling=1000.0,   
+            solver="saga",               
+            max_iter=1000               
+        )
+)
 
 # FilterBank+SVM
 pipelines["FilterBank+SVM"] = make_pipeline(
-    Covariances("oas"), TangentSpace(metric="riemann"), SVC(kernel="linear")
+    ExtendedSSVEPSignal(), Covariances("oas"), TangentSpace(metric="riemann"), SVC(kernel="linear")
 )
 
 # CSP+SVM
@@ -88,12 +103,12 @@ pipelines["CSP+SVM"] = make_pipeline(
 
 # DLCSPauto+shLDA
 pipelines["DLCSPauto+shLDA"] = make_pipeline(
-    Covariances("oas"), TangentSpace(metric="riemann"), LDA()
+    Covariances("oas"), CSP(nfilter=6), LDA(solver="lsqr", shrinkage="auto")
 )
 
 # CSP+LDA
 pipelines["CSP+LDA"] = make_pipeline(
-    Covariances("oas"), TangentSpace(metric="riemann"), LDA()
+    Covariances("oas"), CSP(nfilter=6), LDA(solver="svd")
 )
 
 # MDM
@@ -103,7 +118,7 @@ pipelines["MDM"] = make_pipeline(
 
 # TRCSP+LDA
 pipelines["TRCSP+LDA"] = make_pipeline(
-    Covariances("oas"), TangentSpace(metric="riemann"), LDA()
+    Covariances("scm"), TRCSP(nfilter=6), LDA()
 )
 
 #converts matrix 3D > 2D feature vector.
@@ -111,12 +126,12 @@ from moabb.pipelines.features import LogVariance
 
 # LogVariance+LDA
 pipelines["LogVariance+LDA"] = make_pipeline(
-    Covariances("oas"), LogVariance(),  LDA()
+    LogVariance(),  LDA(solver="svd")
 )
 
 # LogVariance+SVM
 pipelines["LogVariance+SVM"] = make_pipeline(
-    Covariances("oas"), LogVariance(), SVC(kernel="linear")
+    LogVariance(), SVC(kernel="linear")
 )
 
 #----------------------------pipeline definition----------------------------
@@ -135,45 +150,55 @@ filtered_ds=subjDS_setup(paradigm,filtered_setup)
 seeds=[1,2,3]
 results={}
 
-pipelines = {}
+# pipelines = {}
+# param_grid = {}
+# pipelines["TS+SVM"] = Pipeline(
+#     steps=[("Covariances", Covariances("oas")),
+#         ("Tangent_Space", TangentSpace(metric="riemann")),
+#         (
+#             "svc",
+#             SVC(kernel="linear"),
+#         ),
+#     ]
+# )
+# param_grid["TS+SVM"] = {
+#     "svc__C": [0.5,1,1.5],
+#     "svc__kernel":["rbf","linear"],
+# }
+# pipelines["LogVariance+SVM"] = Pipeline(
+#     steps=[
+#         ("LogVariance", LogVariance()),  
+#         ("svc", SVC(kernel="linear")),  
+#     ]
+# )
+# param_grid["LogVariance+SVM"] = {
+#     "svc__C": [0.01, 0.05, 0.1, 0.5, 1, 5, 10, 50, 100]  # Tuning C for the SVM
+# }
+# evaluation = WithinSessionEvaluation(
+#         paradigm=paradigm,
+#         datasets=filtered_ds,
+#         overwrite=True,
+#         random_state=s,
+#         n_jobs=-1,
+#         save_model=False,
+#     )
+# result = evaluation.process(pipelines, param_grid)
 
-pipelines["TS+SVM"] = Pipeline(
-    steps=[("Covariances", Covariances("oas")),
-        ("Tangent_Space", TangentSpace(metric="riemann")),
-        (
-            "svc",
-            SVC(kernel="linear"),
-        ),
-    ]
-)
-param_grid = {}
-param_grid["TS+SVM"] = {
-    "svc__C": [0.5,1,1.5],
-    "svc__kernel":["rbf","linear"],
-}
-for s in seeds:
-    evaluation = WithinSessionEvaluation(
-        paradigm=paradigm,
-        datasets=filtered_ds,
+model_list=["ShallowConvNet","DeepConvNet","EEGITNet","EEGNeX","EEGNet_8_2","EEGTCNet"]
+for n in model_list:
+    name="./pipelines/Keras_"+n+".yml"
+    print(f"---running benchmark on {name}---")
+    result = benchmark(
+        pipelines=name,
+        evaluations=["WithinSession"],
+        paradigms=["LeftRightImagery"],
+        include_datasets=filtered_ds,
+        results="./output_csv/net_results/",
         overwrite=True,
-        random_state=s,
-        hdf5_path="./output_csv/",
-        n_jobs=-1,
-        save_model=True,
+        plot=False
     )
-    result = evaluation.process(pipelines, param_grid)
-    # result = benchmark(
-    #     pipelines="./TSSVM_grid.yml",
-    #     evaluations=["WithinSession"],
-    #     paradigms=["LeftRightImagery"],
-    #     include_datasets=filtered_ds,
-    #     results="./output_csv/",
-    #     overwrite=True,
-    #     plot=False,
-    #     output="./output_csv/",
-    # )
     print(result)
-    filename = f"./output_csv/seed_results/grid_seed={s}.csv" 
+    filename = f"./output_csv/net_results/{n}.csv" 
     result.to_csv(filename, index=False)
     print(f"Saved {filename}")
 # for s in seeds:
