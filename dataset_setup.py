@@ -62,7 +62,7 @@ def subjDS_setup(paradigm, filter_dict):
     output=[]
     for ds_name in filter_dict.keys():
         _, dataset = get_dataset_by_name(paradigm, ds_name)
-        dataset.subject_list = filter_dict[ds_name].keys()
+        dataset.subject_list = list(filter_dict[ds_name].keys())
         output.append(dataset)
     return output
 
