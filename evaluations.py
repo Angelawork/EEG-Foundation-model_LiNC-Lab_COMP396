@@ -95,65 +95,75 @@ class EntireDatasetEvaluation(BaseEvaluation):
         X_train, X_test, y_train, y_test = train_test_split(
             X, y, test_size=0.2, stratify=y, random_state=self.random_state
         )
-        # (80-20 split)
-        # X_train, X_val, y_train, y_val = train_test_split(
-        #     X_train_val, y_train_val, test_size=0.2, stratify=y_train_val, random_state=self.random_state
-        # )
 
         #inner cross-validation for hyperparameter tuning
         inner_cv = StratifiedKFold(3, shuffle=True, random_state=self.random_state)
         scorer = get_scorer(self.paradigm.scoring)
 
-        for name, clf in run_pipes.items():
-            t_start = time()
+        split=5
+        cv = StratifiedKFold(split, shuffle=True, random_state=self.random_state)
+        groups = metadata.subject.values
+        n_subjects = split
+        for cv_ind, (train, test) in enumerate(
+                    tqdm(
+                        cv.split(X, y, groups),
+                        total=n_subjects,
+                        desc=f"{dataset.code}-EntireDataset",
+                    )
+                ):
+          X_train,y_train=X[train], y[train]
+          X_test,y_test=X[test], y[test]
 
-            clf = self._grid_search(
-                param_grid=param_grid, name=name, grid_clf=clf, inner_cv=inner_cv
-            )
+          for name, clf in run_pipes.items():
+              t_start = time()
 
-            # Train the final model on the training set (X_train)
-            model = deepcopy(clf).fit(X_train,y_train)
-            print("--------------model fitted-----------------")
-            duration = time() - t_start
+              clf = self._grid_search(
+                  param_grid=param_grid, name=name, grid_clf=clf, inner_cv=inner_cv
+              )
 
-            # Save the model if necessary
-            if self.hdf5_path is not None and self.save_model:
-                model_save_path = create_save_path(
-                    hdf5_path=self.hdf5_path,
-                    code=dataset.code,
-                    subject="all_subjects",
-                    session="",
-                    name=name,
-                    grid=False,
-                    eval_type="CrossSubject",
-                )
-                save_model_cv(model=model, save_path=model_save_path)
+              # Train the final model on the training set (X_train)
+              model = deepcopy(clf).fit(X_train,y_train)
+              print("--------------model fitted-----------------")
+              duration = time() - t_start
 
-            test_score = _score(
-                estimator=model,
-                X_test=X_test,
-                y_test=y_test,
-                scorer=scorer,
-                score_params={},
-            )
+              # Save the model if necessary
+              if self.hdf5_path is not None and self.save_model:
+                  model_save_path = create_save_path(
+                      hdf5_path=self.hdf5_path,
+                      code=dataset.code,
+                      subject="all_subjects",
+                      session="",
+                      name=name,
+                      grid=False,
+                      eval_type="CrossSubject",
+                  )
+                  save_model_cv(model=model, save_path=model_save_path)
 
-            # Collect the results
-            nchan = X.info["nchan"] if isinstance(X, BaseEpochs) else X.shape[1]
-            res = {
-                "time": duration,
-                "dataset": dataset,
-                "subject": "all_subjects",
-                "session": "all_sessions",
-                "score": test_score,
-                "n_samples_train": len(X_train),
-                "n_samples_test": len(X_test),
-                "n_samples": len(X_train)+len(X_test),
-                "n_channels": nchan,
-                "pipeline": name,
-            }
-            print(res)
+              test_score = _score(
+                  estimator=model,
+                  X_test=X_test,
+                  y_test=y_test,
+                  scorer=scorer,
+                  score_params={},
+              )
 
-            yield res
+              # Collect the results
+              nchan = X.info["nchan"] if isinstance(X, BaseEpochs) else X.shape[1]
+              res = {
+                  "time": duration,
+                  "dataset": dataset,
+                  "subject": "all_subjects",
+                  "session": f"all_sessions_{cv_ind}",
+                  "score": test_score,
+                  "n_samples_train": len(X_train),
+                  "n_samples_test": len(X_test),
+                  "n_samples": len(X_train)+len(X_test),
+                  "n_channels": nchan,
+                  "pipeline": name,
+              }
+              print(res)
+
+              yield res
 
     def is_valid(self, dataset):
         return True
