@@ -1,0 +1,9 @@
+score,time,samples,subject,session,channels,n_sessions,dataset,pipeline
+0.9000313,51.52035,2592.0,all_subjects,all_sessions_3,22,2,BNCI2014-001,Keras_EEGNet_8_2
+0.899599,70.116,2592.0,all_subjects,all_sessions_4,22,2,BNCI2014-001,Keras_EEGNet_8_2
+0.88768804,119.93006,2592.0,all_subjects,all_sessions_3,22,2,BNCI2014-001,Keras_EEGITNet
+0.9031469,121.1951,2592.0,all_subjects,all_sessions_4,22,2,BNCI2014-001,Keras_EEGITNet
+0.82330316,131.12521,2592.0,all_subjects,all_sessions_3,22,2,BNCI2014-001,Keras_EEGNeX
+0.8451275,128.6733,2592.0,all_subjects,all_sessions_4,22,2,BNCI2014-001,Keras_EEGNeX
+0.90436935,115.8931,2592.0,all_subjects,all_sessions_3,22,2,BNCI2014-001,Keras_EEGTCNet
+0.8949777,83.64322,2592.0,all_subjects,all_sessions_4,22,2,BNCI2014-001,Keras_EEGTCNet

@@ -1,0 +1,9 @@
+score,time,samples,subject,session,channels,n_sessions,dataset,pipeline,paradigm,evaluation
+0.888,643.0248,100.0,4,2,14,3,Zhou2016,Keras_EEGNeX,LeftRightImagery,WithinSession
+0.9390625,57.24983,160.0,8,3test,3,5,BNCI2014-004,Keras_EEGNeX,LeftRightImagery,WithinSession
+0.98125,191.65344,160.0,8,4test,3,5,BNCI2014-004,Keras_EEGNeX,LeftRightImagery,WithinSession
+0.6,52.33335,120.0,9,0train,3,5,BNCI2014-004,Keras_EEGNeX,LeftRightImagery,WithinSession
+0.62222224,58.734123,120.0,9,1train,3,5,BNCI2014-004,Keras_EEGNeX,LeftRightImagery,WithinSession
+0.9078125,72.49928,160.0,9,2train,3,5,BNCI2014-004,Keras_EEGNeX,LeftRightImagery,WithinSession
+0.8890625,138.91731,160.0,9,3test,3,5,BNCI2014-004,Keras_EEGNeX,LeftRightImagery,WithinSession
+0.615625,53.725597,160.0,9,4test,3,5,BNCI2014-004,Keras_EEGNeX,LeftRightImagery,WithinSession

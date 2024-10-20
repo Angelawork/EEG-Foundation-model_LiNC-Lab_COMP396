@@ -1,0 +1,5 @@
+score,time,samples,subject,session,channels,n_sessions,dataset,pipeline
+0.9669468,52.055862,1199.0,all_subjects,all_sessions_4,14,3,Zhou2016,Keras_EEGTCNet
+0.9563025,58.394554,1199.0,all_subjects,all_sessions_4,14,3,Zhou2016,Keras_EEGNeX
+0.9665266,33.0294,1199.0,all_subjects,all_sessions_4,14,3,Zhou2016,Keras_EEGNet_8_2
+0.9735294,78.86461,1199.0,all_subjects,all_sessions_4,14,3,Zhou2016,Keras_EEGITNet

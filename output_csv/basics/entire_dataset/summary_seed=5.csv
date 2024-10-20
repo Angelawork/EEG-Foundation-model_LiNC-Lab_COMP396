@@ -1,0 +1,5 @@
+pipeline,BNCI2014-001,BNCI2014-004,Zhou2016
+Keras_EEGITNet,89.54±1.09,,97.35±nan
+Keras_EEGNeX,83.42±1.54,71.20±nan,95.63±nan
+Keras_EEGNet_8_2,89.98±0.03,77.96±nan,96.65±nan
+Keras_EEGTCNet,89.97±0.66,77.45±nan,96.69±nan
