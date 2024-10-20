@@ -1,12 +1,15 @@
 import utils
 import dataset_setup
 
-from moabb.evaluations import WithinSessionEvaluation, CrossSessionEvaluation, CrossSubjectEvaluation
+import moabb
+import moabb.evaluations
+from moabb.evaluations import WithinSessionEvaluation, CrossSessionEvaluation
+from evaluations import CrossSubjectEvaluation, EntireDatasetEvaluation
 from sklearn.pipeline import Pipeline
 import pandas as pd
 import numpy as np
 
-def run_pipeline(datasets, paradigm, model_pipeline, eval_scheme, random_state=24):
+def run_pipeline(datasets, paradigm, model_pipeline, eval_scheme, setup=None, random_state=24, subj_rename=False, param_grid=None,return_epochs=True):
     """
     Pipeline Model's name will be renamed according to the rename dict.
 
@@ -32,13 +35,21 @@ def run_pipeline(datasets, paradigm, model_pipeline, eval_scheme, random_state=2
     for ds in datasets:
         if eval_scheme == "WithinSessionEvaluation":
             evaluation = WithinSessionEvaluation(paradigm=paradigm, random_state=random_state,
-                                                  datasets=[ds], overwrite=True)
+                                                  datasets=[ds], overwrite=True, n_jobs=-1,save_model=False)
         elif eval_scheme =="CrossSessionEvaluation":
             evaluation = CrossSessionEvaluation(paradigm=paradigm, random_state=random_state,
-                                                 datasets=[ds], overwrite=True)
+                                                 datasets=[ds], overwrite=True, n_jobs=-1,save_model=False)
         elif eval_scheme =="CrossSubjectEvaluation":
-            evaluation=CrossSubjectEvaluation(paradigm=paradigm, random_state=random_state,
-                                               datasets=[ds], overwrite=True)
+            if setup is not None:
+                evaluation=CrossSubjectEvaluation(setup,paradigm=paradigm, random_state=random_state,
+                                               datasets=[ds], overwrite=True, n_jobs=-1,save_model=False)
+            else:
+                evaluation=moabb.evaluations.CrossSubjectEvaluation(paradigm=paradigm, random_state=random_state,
+                                               datasets=[ds], overwrite=True, n_jobs=-1,save_model=False)
+        elif eval_scheme =="EntireDatasetEvaluation":
+            evaluation=EntireDatasetEvaluation(None,paradigm=paradigm, random_state=random_state,
+                                               datasets=[ds], overwrite=True, n_jobs=-1,save_model=False,
+                                               return_epochs=return_epochs)
         else:
             raise ValueError(f"Invalid eval_scheme: {eval_scheme}")
 
@@ -53,19 +64,23 @@ def run_pipeline(datasets, paradigm, model_pipeline, eval_scheme, random_state=2
             raise ValueError(f"Invalid pipeline: {model_pipeline}")
         
         print(f"Running the pipeline on dataset={ds.code} using paradigm: {paradigm}")
-        result = evaluation.process(pipelines)
+        if param_grid is not None:
+            result = evaluation.process(pipelines, param_grid)
+        else:
+            result = evaluation.process(pipelines)
         print(f"Result on dataset={ds.code}: {result}")
-
-        try:#renaming subject id by original order
-            original_subject_ids = [subj[1] for subj in ds.subjects_list]
-            if isinstance(model_pipeline, Pipeline):
-                result["pipeline"] = pipe_name
-                result["subject"] =original_subject_ids[:len(result)]
-            else:
-                for pipe_name in pipelines:
-                    result["subject"] = original_subject_ids * (len(result)//len(original_subject_ids))
-        except:
-            print(f"Failed to rename Dataset {ds.code} pipeline output with original subject id")
+        
+        if subj_rename:
+            try:#renaming subject id by original order
+                original_subject_ids = [subj[1] for subj in ds.subjects_list]
+                if isinstance(model_pipeline, Pipeline):
+                    result["pipeline"] = pipe_name
+                    result["subject"] =original_subject_ids[:len(result)]
+                else:
+                    for pipe_name in pipelines:
+                        result["subject"] = original_subject_ids * (len(result)//len(original_subject_ids))
+            except:
+                print(f"Failed to rename Dataset {ds.code} pipeline output with original subject id")
         eval_results[ds.code] = result
         
     return eval_results

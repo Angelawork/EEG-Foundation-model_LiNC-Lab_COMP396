@@ -3,6 +3,32 @@ import seaborn as sns
 import pandas as pd
 import numpy as np
 
+def read_config(file_path):
+    subject_sessions=[]
+    with open(file_path, "r") as file:
+        for line in file:
+            subject_sessions+=[l.strip() for l in line.split()]
+    return subject_sessions
+
+def get_included_df(setup, df):
+    filtered_df = df[df.apply(lambda r: r["session"] in setup.get(int(r["subject"]), []), axis=1)]
+    return filtered_df
+
+def avg_over_seed(results):
+    average = {}
+    for ds_name in results[next(iter(results))].keys():
+        dfs= [results[seed][ds_name] for seed in results.keys()] 
+        df_concat = pd.concat(dfs, keys=results.keys())
+        average[ds_name] = df_concat.groupby(['dataset', 'pipeline']).mean().reset_index()
+
+    return average
+
+def save_results_dict(result, seed):
+  for key, df in result.items():
+        filename = f"./output_csv/seed_results/ds={key}_seed={seed}.csv" 
+        df.to_csv(filename, index=False)
+        print(f"Saved {filename}")
+
 def process_results(results):
     """
     Params:
@@ -33,7 +59,7 @@ def process_results(results):
     """
     df = pd.concat(results.values(), ignore_index=True)
     df=df.groupby(["pipeline", "dataset"])["score"].agg([np.mean, np.std])
-    df["scores"] = df.apply(lambda x: f'{x["mean"]:.2f}±{x["std"]:.2f}', axis=1)
+    df["scores"] = df.apply(lambda x: f'{x["mean"]*100:.2f}±{x["std"]*100:.2f}', axis=1)
     df = df.drop(columns=["mean", "std"]).unstack()
     df.columns = df.columns.droplevel()
     df=df.reset_index()
