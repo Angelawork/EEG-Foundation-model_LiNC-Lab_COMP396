@@ -188,6 +188,16 @@ from moabb.datasets import BNCI2014_001, Zhou2016,BNCI2014_004
 paradigm=MotorImagery(n_classes=2, events=["left_hand", "right_hand"])
 ds=[BNCI2014_001(),Zhou2016(),BNCI2014_004()]
 seeds=[1,2,3,4,5]
+
+# NOTE:if you want to filter dataset by subject-session pairs, use the following:
+#-------------extract config from text file for session/subject id-------------
+# subject_sessions_config=read_config("./benchmark1_subjects.txt")
+# subject_sessions_setup = extract_subject_sessions(subject_sessions_config)
+# filtered_setup=parse_setup(paradigm,subject_sessions_setup)
+# print(f"Parsed Config for this experiment: {filtered_setup}")
+#-------------setup dataset list-------------
+# filtered_ds=subjDS_setup(paradigm,filtered_setup)
+
 results={}
 output_folder="basics/entire_dataset/reruns"
 scheme="EntireDatasetEvaluation"
