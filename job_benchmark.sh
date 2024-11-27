@@ -35,4 +35,5 @@ export TF_ENABLE_ONEDNN_OPTS=0
 # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CUDA_HOME/extras/CUPTI/lib64
 # echo $LD_LIBRARY_PATH
 
-python basic_benchmark.py
+# export TF_XLA_FLAGS="--tf_xla_disable_jit"
+TF_CPP_MIN_LOG_LEVEL=1 TF_XLA_FLAGS="--tf_xla_auto_jit=0 --tf_xla_cpu_global_jit" python basic_benchmark_yml.py
