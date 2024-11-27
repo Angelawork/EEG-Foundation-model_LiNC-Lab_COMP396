@@ -19,6 +19,7 @@ from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 
+import tensorflow as tf
 from keras.losses import BinaryCrossentropy
 from moabb.pipelines.deep_learning import KerasEEGNeX, KerasEEGTCNet, KerasEEGNet_8_2, KerasEEGITNet, KerasShallowConvNet
 from moabb.pipelines import ExtendedSSVEPSignal
@@ -32,6 +33,10 @@ from moabb.pipelines.utils import parse_pipelines_from_directory
 moabb.set_log_level("info")
 mne.set_log_level("CRITICAL")
 warnings.filterwarnings("ignore")
+
+#for deep convnet:
+tf.config.optimizer.set_jit(False) 
+os.environ['TF_DETERMINISTIC_OPS'] = '0'
 
 def set_seed(s):
     np.random.seed(s)
@@ -177,7 +182,7 @@ param_grid["LogVariance+SVM"] = {
 
 #----------------------------pipeline definition----------------------------
 
-# experiment setup
+#----------------------------experiment setup----------------------------
 from moabb.datasets import BNCI2014_001, Zhou2016,BNCI2014_004
 
 paradigm=MotorImagery(n_classes=2, events=["left_hand", "right_hand"])
@@ -202,7 +207,8 @@ for s in seeds:
     processed_df=process_results(result)
     processed_df.to_csv(f"./output_csv/{output_folder}/summary_seed={s}.csv", index=False)
     print(processed_df)
-    
+
+#----------------------------formatting output df----------------------------
 # avg_results=avg_over_seed(results)
 # print(avg_results)
 # for key, df in avg_results.items():
@@ -210,3 +216,21 @@ for s in seeds:
 #     df.to_csv(filename, index=False)
 #     print(f"Saved {filename}")
 
+#----------------------------running experiment on yml files----------------------------
+# model_list=["Keras_DeepConvNet"]
+# for n in model_list:
+#     name="./pipelines/"+n+".yml"
+#     print(f"---running benchmark on {name}---")
+#     result = benchmark(
+#         pipelines=name,
+#         evaluations=["EntireDataset"],
+#         paradigms=["LeftRightImagery"],
+#         include_datasets=ds,
+#         results="./output_csv/net_results/",
+#         overwrite=True,
+#         plot=False
+#     )
+#     print(result)
+#     filename = f"./output_csv/{output_folder}/ymlnets_tuned_{n}.csv" 
+#     result.to_csv(filename, index=False)
+#     print(f"Saved {filename}")

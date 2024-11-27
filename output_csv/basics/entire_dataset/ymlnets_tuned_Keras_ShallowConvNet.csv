@@ -1,0 +1,16 @@
+score,time,samples,subject,session,channels,n_sessions,dataset,pipeline,paradigm,evaluation
+0.900891,79.547066,2592.0,all_subjects,all_sessions_0,22,2,BNCI2014-001,Keras_ShallowConvNet,LeftRightImagery,EntireDataset
+0.92270565,199.13571,2592.0,all_subjects,all_sessions_1,22,2,BNCI2014-001,Keras_ShallowConvNet,LeftRightImagery,EntireDataset
+0.93825376,87.39765,2592.0,all_subjects,all_sessions_2,22,2,BNCI2014-001,Keras_ShallowConvNet,LeftRightImagery,EntireDataset
+0.91617596,181.0054,2592.0,all_subjects,all_sessions_3,22,2,BNCI2014-001,Keras_ShallowConvNet,LeftRightImagery,EntireDataset
+0.9203649,68.79313,2592.0,all_subjects,all_sessions_4,22,2,BNCI2014-001,Keras_ShallowConvNet,LeftRightImagery,EntireDataset
+0.9679861,27.254293,1199.0,all_subjects,all_sessions_0,14,3,Zhou2016,Keras_ShallowConvNet,LeftRightImagery,EntireDataset
+0.9784028,81.67819,1199.0,all_subjects,all_sessions_1,14,3,Zhou2016,Keras_ShallowConvNet,LeftRightImagery,EntireDataset
+0.9596528,26.30169,1199.0,all_subjects,all_sessions_2,14,3,Zhou2016,Keras_ShallowConvNet,LeftRightImagery,EntireDataset
+0.97041667,25.948322,1199.0,all_subjects,all_sessions_3,14,3,Zhou2016,Keras_ShallowConvNet,LeftRightImagery,EntireDataset
+0.95259106,24.802021,1199.0,all_subjects,all_sessions_4,14,3,Zhou2016,Keras_ShallowConvNet,LeftRightImagery,EntireDataset
+0.7570324,50.715546,6520.0,all_subjects,all_sessions_0,3,5,BNCI2014-004,Keras_ShallowConvNet,LeftRightImagery,EntireDataset
+0.755187,50.680836,6520.0,all_subjects,all_sessions_1,3,5,BNCI2014-004,Keras_ShallowConvNet,LeftRightImagery,EntireDataset
+0.7460433,51.300278,6520.0,all_subjects,all_sessions_2,3,5,BNCI2014-004,Keras_ShallowConvNet,LeftRightImagery,EntireDataset
+0.75836736,50.10188,6520.0,all_subjects,all_sessions_3,3,5,BNCI2014-004,Keras_ShallowConvNet,LeftRightImagery,EntireDataset
+0.74960715,51.07819,6520.0,all_subjects,all_sessions_4,3,5,BNCI2014-004,Keras_ShallowConvNet,LeftRightImagery,EntireDataset
