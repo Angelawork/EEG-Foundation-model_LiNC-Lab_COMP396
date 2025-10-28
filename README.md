@@ -8,6 +8,7 @@ Abstract:
   population dynamics analysis.
   
 ---
+### [📄 View the report (PDF)](https://github.com/Angelawork/EEG-Foundation-model_LiNC-Lab_COMP396/blob/main/AngelaHu_COMP396report.pdf)
 
 # Background and Related Work
 
